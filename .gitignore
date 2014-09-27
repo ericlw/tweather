@@ -1,0 +1,15 @@
+# Standard project files
+config.js
+*.log
+
+# Node
+node_modules
+
+# Mac specific
+.DS_Store
+
+# Idea
+.idea
+
+# Eclipse
+.project
