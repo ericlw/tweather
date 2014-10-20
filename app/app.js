@@ -4,8 +4,8 @@ var config = require('./config');
 
 var twitter = new Twitter(config);
 
-// Stream of @mentions for @tweather_app
-var stream = twitter.stream('statuses/filter', { track: '@tweather_app' });
+// Stream of @mentions for weather_account
+var stream = twitter.stream('statuses/filter', { track: config.weather_account });
 
 // Attempting connection to streaming API
 stream.on('connect', function (response) {
@@ -22,35 +22,17 @@ stream.on('tweet', function (tweet) {
     handleTweet(tweet);
 });
 
-function handleTweet(tweet) {
-    var weather, status;
-    var zip = extractCityOrZip(tweet.text);
-    if (zip) {
-        getWeather(zip, function (data) {
-            if (data) {
-                weather = data;
-            }
-        });
-    } else {
-        var geo = tweet.coordinates;
-        if (geo && geo.type == 'Point') {
-            var lat = geo.coordinates[1];
-            var lon = geo.coordinates[0];
-            var query = "lat=" + lat + "&lon=" + lon;
-            getWeather(query, function (data) {
-                if (data) {
-                    weather = data;
-                }
-            });
-        }
-    }
-    if (weather) {
-        status = "@" + tweet.user.screen_name + " the forecast for " + weather.name +
+function respondToTweetWithWeather(tweet, weather) {
+    var status = "@" + tweet.user.screen_name;
+    if (weather.cod == 200) {
+        status += " the forecast for " + weather.name +
             " today is " + weather.weather[0].main.toLowerCase() +
             " with a high of " + weather.main.temp_max + " and a low of " + weather.main.temp_min;
+    } else if (weather.cod == 404) {
+        status += " sorry, we could not seem to locate that city :( Please try again!"
     } else {
-        status = "@" + tweet.user.screen_name + " I cannot seem to find where you want the weather for. " +
-        "Please include a zip code or geo-tag your tweet!";
+        status += " I cannot seem to find where you want the weather for. " +
+            "Please include a zip code or geo-tag your tweet!" + new Date();
     }
     twitter.post('statuses/update', { status: status, in_reply_to_status_id: tweet.id_str }, function (err, data, response) {
         if (err) {
@@ -62,9 +44,10 @@ function handleTweet(tweet) {
 }
 
 function getWeather(query, callback) {
-    request("http://api.openweathermap.org/data/2.5/weather?units=imperial&q=" + query, function (err, response, body) {
+    request("http://api.openweathermap.org/data/2.5/weather?units=imperial&" + query, function (err, response, body) {
         if (err) {
-            return console.log("Error getting weather for lat=" + lat + " & lon=" + lon, err);
+            console.log("Error getting weather for lat=" + lat + " & lon=" + lon, err);
+            return
         }
         var weather = JSON.parse(body);
         callback(weather);
@@ -73,6 +56,45 @@ function getWeather(query, callback) {
 
 function extractCityOrZip(str) {
     var re = /\d{5}/g;
-
     return  re.exec(str);
+}
+
+function resolveZipCode(zip, callback) {
+    request("http://zip.getziptastic.com/v2/US/" + zip, function (err, response, body) {
+        if (err) {
+            return console.log("Error getting resolving zip code " + zip);
+        }
+        var city = JSON.parse(body).city;
+        callback(city);
+    });
+}
+
+function handleTweet(tweet) {
+    var query;
+    var zip = extractCityOrZip(tweet.text);
+    if (zip) {
+        request("http://zip.getziptastic.com/v2/US/" + zip, function (err, response, body) {
+            if (err) {
+                console.log("Error resolving zip code")
+            }
+            try {
+                var location = JSON.parse(body);
+                var city = "q=" + location.city + "," + location.country;
+            } catch (ex) {
+            }
+            getWeather(city, function (weather) {
+                respondToTweetWithWeather(tweet, weather)
+            });
+        });
+    } else {
+        var geo = tweet.coordinates;
+        if (geo && geo.type == 'Point') {
+            var lat = geo.coordinates[1];
+            var lon = geo.coordinates[0];
+            query = "lat=" + lat + "&lon=" + lon;
+        }
+        getWeather(query, function (weather) {
+            respondToTweetWithWeather(tweet, weather)
+        });
+    }
 }
