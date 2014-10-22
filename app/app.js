@@ -19,7 +19,11 @@ stream.on("connected", function (response) {
 
 // The @mentions
 stream.on('tweet', function (tweet) {
-    handleTweet(tweet);
+    try {
+        handleTweet(tweet);
+    } catch (err) {
+        console.log("Unexpected error handling tweet: ", tweet)
+    }
 });
 
 function respondToTweetWithWeather(tweet, weather) {
