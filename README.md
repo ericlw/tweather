@@ -1,6 +1,6 @@
 #Tweather
 
-Get on demand weather for your current location on Twitter. Tweather watches for geo tagged @mentions of [@Tweather_app](https://twitter.com/tweather_app) and replies back with current weather for the location that the mention came from.
+Get on demand weather for your current location on Twitter. Tweather watches for geo tagged @mentions of [@Tweather](https://twitter.com/tweather) and replies back with current weather for the location that the mention came from.
 
 The app uses the [Open Weather Map API](http://openweathermap.org/api) to get weather information.
 
@@ -13,4 +13,4 @@ The app uses the [Open Weather Map API](http://openweathermap.org/api) to get we
 * clone this repository.
 * `npm install`
 * `mv app/config.sample.json app/config.json`
-* input your application credentials in app/config.json
+* input your application credentials in app/config.json including the handle for your app.
