@@ -25,7 +25,7 @@ Create and obtain consumer keys and access tokens from your newly created Twitte
 
 Create an account and obtain an API key. This will also be used by your config.js file
 
-* clone this repository.
+* Clone this repository.
 * On your command line, type `npm install`, which installs the dependencies this project will require.
 * On your command line, `mv app/config.sample.js app/config.js`
 * input your application credentials in app/config.js including the handle for your app.
