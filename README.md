@@ -15,21 +15,21 @@ The app uses the [Open Weather Map API](http://openweathermap.org/api) to get we
 
 #Getting Started
 
-1. Register an application at https://apps.twitter.com
+* Register an application at https://apps.twitter.com
 
 Note: Creating new Twitter applications require that your Twitter profile have a mobile phone number attached to the profile.
 
 Create and obtain consumer keys and access tokens from your newly created Twitter app. These will be used by your config.js file.
 
-2. Register for an API Key at http://openweathermap.org/
+* Register for an API Key at http://openweathermap.org/
 
 Create an account and obtain an API key. This will also be used by your config.js file
 
-3. clone this repository.
-4. On your command line, type `npm install`, which installs the dependencies this project will require.
-5. On your command line, `mv app/config.sample.js app/config.js`
-6. input your application credentials in app/config.js including the handle for your app.
-7. Start the node server by typing `node app/app.js`
-8. On Twitter.com or a Twitter mobile app, create and send a tweet to @Tweather with a zip code!
+* clone this repository.
+* On your command line, type `npm install`, which installs the dependencies this project will require.
+* On your command line, `mv app/config.sample.js app/config.js`
+* input your application credentials in app/config.js including the handle for your app.
+* Start the node server by typing `node app/app.js`
+* On Twitter.com or a Twitter mobile app, create and send a tweet to @Tweather with a zip code!
 
 Note: The Twitter user that you get a response from will be the account that is authorized with this Twitter application, not @Tweather.
