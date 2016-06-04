@@ -32,13 +32,16 @@ function respondToTweetWithWeather(tweet, weather) {
         status += " the forecast for " + weather.name +
             " today is " + weather.weather[0].main.toLowerCase() +
             " with a high of " + weather.main.temp_max + " and a low of " + weather.main.temp_min;
+    } else if (weather.cod == 401) { //unauthorized
+        status += weather.message;
     } else if (weather.cod == 404) {
         status += " sorry, we could not seem to locate that city :( Please try again!"
     } else {
         status += " I cannot seem to find where you want the weather for. " +
-            "Please include a zip code or geo-tag your tweet!" + new Date();
+            "Please include a zip code or geo-tag your tweet!";
     }
     twitter.post('statuses/update', { status: status, in_reply_to_status_id: tweet.id_str }, function (err, data, response) {
+	console.log("status: "+ status)
         if (err) {
             console.log(err);
         } else {
@@ -48,12 +51,13 @@ function respondToTweetWithWeather(tweet, weather) {
 }
 
 function getWeather(query, callback) {
-    request("http://api.openweathermap.org/data/2.5/weather?units=imperial&" + query, function (err, response, body) {
+    request("http://api.openweathermap.org/data/2.5/weather?units=imperial&" + query + "&APPID=" + config.open_weather_appid, function (err, response, body) {
         if (err) {
             console.log("Error getting weather for lat=" + lat + " & lon=" + lon, err);
             return
         }
         var weather = JSON.parse(body);
+        console.log("body: " + body);
         callback(weather);
     });
 }
@@ -76,6 +80,7 @@ function resolveZipCode(zip, callback) {
 function handleTweet(tweet) {
     var query;
     var zip = extractCityOrZip(tweet.text);
+    //console.log("original tweet: " + tweet.text + ", zip: " + zip);
     if (zip) {
         request("http://zip.getziptastic.com/v2/US/" + zip, function (err, response, body) {
             if (err) {
