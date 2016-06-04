@@ -10,7 +10,8 @@ The app uses the [Open Weather Map API](http://openweathermap.org/api) to get we
 #Getting Started
 
 * register an application at https://apps.twitter.com
+* register for an API Key at http://openweathermap.org/
 * clone this repository.
 * `npm install`
-* `mv app/config.sample.json app/config.json`
+* `mv app/config.sample.js app/config.js`
 * input your application credentials in app/config.json including the handle for your app.
