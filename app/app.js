@@ -1,7 +1,7 @@
 var Twitter = require('twit');
 var request = require('request');
 var config = require('./config');
-
+var fs = require("fs");
 var twitter = new Twitter(config);
 
 // Stream of @mentions for weather_account
@@ -32,22 +32,51 @@ function respondToTweetWithWeather(tweet, weather) {
         status += " the forecast for " + weather.name +
             " today is " + weather.weather[0].main.toLowerCase() +
             " with a high of " + weather.main.temp_max + " and a low of " + weather.main.temp_min;
+
+        getWeatherIcon(weather.weather[0].icon, function(mediaIdStr){
+            postStatusUpdateWithMedia(status, mediaIdStr, tweet);
+        });
+
     } else if (weather.cod == 401) { //unauthorized
         status += weather.message;
+
+        postStatusUpdate(status, tweet);
+
     } else if (weather.cod == 404) {
         status += " sorry, we could not seem to locate that city :( Please try again!"
+
+        postStatusUpdate(status, tweet);
+
     } else {
         status += " I cannot seem to find where you want the weather for. " +
             "Please include a zip code or geo-tag your tweet!";
+
+        postStatusUpdate(status, tweet);
     }
+    
+}
+
+function postStatusUpdate(status, tweet) {
     twitter.post('statuses/update', { status: status, in_reply_to_status_id: tweet.id_str }, function (err, data, response) {
-	console.log("status: "+ status)
+    //console.log("status: "+ status)
         if (err) {
             console.log(err);
         } else {
             console.log(data);
         }
     });
+}
+
+function postStatusUpdateWithMedia(status, media_id, tweet){
+twitter.post('statuses/update', { status: status, in_reply_to_status_id: tweet.id_str, media_ids: [media_id]}, function (err, data, response) {
+    //console.log("status: "+ status)
+        if (err) {
+            console.log(err);
+        } else {
+            console.log(data);
+        }
+    });
+
 }
 
 function getWeather(query, callback) {
@@ -57,8 +86,43 @@ function getWeather(query, callback) {
             return
         }
         var weather = JSON.parse(body);
-        console.log("body: " + body);
+        //console.log("body: " + body);
         callback(weather);
+    });
+}
+
+function getWeatherIcon(query, callback){
+    console.log("TEST weather image type: " + query);
+    request("http://openweathermap.org/img/w/" + query + ".png", function(err, response, body){
+        if(err){
+         console.log("openweathermap icon fetch error: " + err);
+         return
+        }
+        //console.log("icon body: " + body);
+        //save to file system?
+        //var b64content = new Buffer(body).toString('base64')
+        //var b64content = fs.readFileSync('./images/10n.png', { encoding: 'base64' })
+
+        twitter.post('media/upload', {media_data: new Buffer(body).toString('base64')}, function (err, data, response) {
+             // now we can assign alt text to the media, for use by screen readers and
+             // other text-based presentations and interpreters
+            if(err){
+             console.log("media/upload error: " + err);
+             return
+            }
+
+            var mediaIdStr = data.media_id_string;
+            var altText = "Weather status";
+            var meta_params = { media_id: mediaIdStr, alt_text: { text: altText } }
+
+          twitter.post('media/metadata/create', meta_params, function (err, data, response) {
+                if (err) {
+                  console.log("Error creating tweet image attachment. error: " + err + ", data: " + data);
+                  return
+                }  
+                callback(mediaIdStr);
+           });
+        });
     });
 }
 
@@ -92,6 +156,7 @@ function handleTweet(tweet) {
             } catch (ex) {
             }
             getWeather(city, function (weather) {
+
                 respondToTweetWithWeather(tweet, weather)
             });
         });
