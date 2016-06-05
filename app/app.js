@@ -92,37 +92,28 @@ function getWeather(query, callback) {
 }
 
 function getWeatherIcon(query, callback){
-    console.log("TEST weather image type: " + query);
-    request("http://openweathermap.org/img/w/" + query + ".png", function(err, response, body){
+   
+    var b64content = fs.readFileSync('./images/'+query+'.png', { encoding: 'base64' })
+
+    twitter.post('media/upload', {media_data: b64content}, function (err, data, response) {
+         // now we can assign alt text to the media, for use by screen readers and
+         // other text-based presentations and interpreters
         if(err){
-         console.log("openweathermap icon fetch error: " + err);
+         console.log("media/upload error: " + err);
          return
         }
-        //console.log("icon body: " + body);
-        //save to file system?
-        //var b64content = new Buffer(body).toString('base64')
-        //var b64content = fs.readFileSync('./images/10n.png', { encoding: 'base64' })
 
-        twitter.post('media/upload', {media_data: new Buffer(body).toString('base64')}, function (err, data, response) {
-             // now we can assign alt text to the media, for use by screen readers and
-             // other text-based presentations and interpreters
-            if(err){
-             console.log("media/upload error: " + err);
-             return
-            }
+        var mediaIdStr = data.media_id_string;
+        var altText = "Weather status";
+        var meta_params = { media_id: mediaIdStr, alt_text: { text: altText } }
 
-            var mediaIdStr = data.media_id_string;
-            var altText = "Weather status";
-            var meta_params = { media_id: mediaIdStr, alt_text: { text: altText } }
-
-          twitter.post('media/metadata/create', meta_params, function (err, data, response) {
-                if (err) {
-                  console.log("Error creating tweet image attachment. error: " + err + ", data: " + data);
-                  return
-                }  
-                callback(mediaIdStr);
-           });
-        });
+      twitter.post('media/metadata/create', meta_params, function (err, data, response) {
+            if (err) {
+              console.log("Error creating tweet image attachment. error: " + err + ", data: " + data);
+              return
+            }  
+            callback(mediaIdStr);
+       });
     });
 }
 
