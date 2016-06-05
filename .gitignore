@@ -1,5 +1,5 @@
 # Standard project files
-#config.js
+config.js
 *.log
 
 # Node
